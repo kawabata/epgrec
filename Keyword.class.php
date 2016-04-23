@@ -1,3 +1,4 @@
+
 <?php
 include_once('config.php');
 include_once( INSTALL_PATH . "/DBRecord.class.php" );
@@ -27,17 +28,17 @@ class Keyword extends DBRecord {
 									$limit = 300 ) {
 		$sts = Settings::factory();
 		
-		$dbh = @mysql_connect($sts->db_host, $sts->db_user, $sts->db_pass );
+		$dbh = @($GLOBALS["___mysqli_ston"] = mysqli_connect($sts->db_host,  $sts->db_user,  $sts->db_pass ));
 		
 		// ちょっと先を検索する
 		$options = " WHERE starttime > '".date("Y-m-d H:i:s", time() + $sts->padding_time + 60 )."'";
 		
 		if( $keyword != "" ) {
 			if( $use_regexp ) {
-				$options .= " AND CONCAT(title,description) REGEXP '".mysql_real_escape_string($keyword)."'";
+				$options .= " AND CONCAT(title,description) REGEXP '".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $keyword) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""))."'";
 			}
 			else {
-				$options .= " AND CONCAT(title,description) like _utf8'%".mysql_real_escape_string($keyword)."%' collate utf8_unicode_ci";
+				$options .= " AND CONCAT(title,description) like _utf8'%".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $keyword) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""))."%' collate utf8_unicode_ci";
 			}
 		}
 		
@@ -155,7 +156,7 @@ class Keyword extends DBRecord {
 			throw $e;
 		}
 		if( $result === false ) throw new exception("レコードが存在しません");
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		while ($row = mysqli_fetch_array($result,  MYSQLI_ASSOC)) {
 			array_push( $retval, new self('id', $row['id']) );
 		}
 		return $retval;

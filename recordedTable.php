@@ -1,3 +1,4 @@
+
 <?php
 include_once('config.php');
 include_once( INSTALL_PATH . '/DBRecord.class.php' );
@@ -13,20 +14,20 @@ $category_id = 0;
 $station = 0;
 
 // mysql_real_escape_stringより先に接続しておく必要がある
-$dbh = @mysql_connect( $settings->db_host, $settings->db_user, $settings->db_pass );
+$dbh = @($GLOBALS["___mysqli_ston"] = mysqli_connect( $settings->db_host,  $settings->db_user,  $settings->db_pass ));
 
 // $options = "WHERE complete='1'";
 $options = "WHERE starttime < '". date("Y-m-d H:i:s")."'";	// ながら再生は無理っぽい？
 
 if(isset( $_GET['key']) ) {
-	$options .= " AND autorec ='".mysql_real_escape_string(trim($_GET['key']))."'";
+	$options .= " AND autorec ='".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"], trim($_GET['key'])) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""))."'";
 }
 
 if(isset( $_POST['do_search'] )) {
 	if( isset($_POST['search'])){
 		if( $_POST['search'] != "" ) {
 			$search = $_POST['search'];
-			 $options .= " AND CONCAT(title,description) like '%".mysql_real_escape_string($_POST['search'])."%'";
+			 $options .= " AND CONCAT(title,description) like '%".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $_POST['search']) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""))."%'";
 		}
 	}
 	if( isset($_POST['category_id'])) {

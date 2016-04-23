@@ -1,7 +1,7 @@
+
 <?php
 include_once( 'config.php' );
 include_once( 'Settings.class.php' );
-
 class DBRecord {
 	protected $__table;
 	
@@ -20,7 +20,7 @@ class DBRecord {
 		
 		if( self::$__dbh === false ) {
 			self::$__settings = Settings::factory();
-			self::$__dbh = @mysql_connect( self::$__settings->db_host , self::$__settings->db_user, self::$__settings->db_pass );
+			self::$__dbh = @($GLOBALS["___mysqli_ston"] = mysqli_connect( self::$__settings->db_host ,  self::$__settings->db_user,  self::$__settings->db_pass ));
 			if( self::$__dbh === false ) throw new exception( "construct:データベースに接続できない" );
 			$sqlstr = "use ".self::$__settings->db_name;
 			$res = $this->__query($sqlstr);
@@ -36,11 +36,11 @@ class DBRecord {
 		}
 		else {
 			$sqlstr = "SELECT * FROM ".$this->__table.
-			            " WHERE ".mysql_real_escape_string( $property ).
-			              "='".mysql_real_escape_string( $value )."'";
+			            " WHERE ".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $property ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : "")).
+			              "='".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $value ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""))."'";
 			
 			$res = $this->__query( $sqlstr );
-			$this->__record_data = mysql_fetch_array( $res , MYSQL_ASSOC );
+			$this->__record_data = mysqli_fetch_array( $res ,  MYSQLI_ASSOC );
 			if( $this->__record_data === false ) throw new exception( "construct:".$this->__table."に".$property."=".$value."はありません" );
 			// 最初にヒットした行のidを使用する
 			$this->__id = $this->__record_data['id'];
@@ -61,7 +61,7 @@ class DBRecord {
 	protected function __query( $sqlstr ) {
 		if( self::$__dbh === false ) throw new exception( "__query:DBに接続されていない" );
 		
-		$res = @mysql_query( $sqlstr, self::$__dbh );
+		$res = @mysqli_query( self::$__dbh ,  $sqlstr);
 		if( $res === false ) throw new exception( "__query:DBクエリ失敗:".$sqlstr );
 		return $res;
 	}
@@ -70,14 +70,14 @@ class DBRecord {
 		$retval = array();
 		
 		$sqlstr = "SELECT * FROM ".$this->__table.
-		            " WHERE ".mysql_real_escape_string( $property ).
-		              "='".mysql_real_escape_string( $value )."'";
+		            " WHERE ".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $property ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : "")).
+		              "='".((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $value ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""))."'";
 		
 		if( $options != null ) {
 			$sqlstr .= "AND ".$options;
 		}
 		$res = $this->__query( $sqlstr );
-		while ($row = mysql_fetch_array($res, MYSQL_ASSOC)) {
+		while ($row = mysqli_fetch_array($res,  MYSQLI_ASSOC)) {
 			array_push( $retval, $row );
 		}
 		
@@ -90,19 +90,19 @@ class DBRecord {
 		if( $this->__id == 0 ) {
 			$sqlstr = "INSERT INTO ".$this->__table." VALUES ( )";
 			$res = $this->__query( $sqlstr );
-			$this->__id = mysql_insert_id();
+			$this->__id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
 			
 			// $this->__record_data読み出し 
 			$sqlstr = "SELECT * FROM ".$this->__table.
 			            " WHERE id = '".$this->__id."'";
 			
 			$res = $this->__query( $sqlstr );
-			$this->__record_data = mysql_fetch_array( $res , MYSQL_ASSOC );
+			$this->__record_data = mysqli_fetch_array( $res ,  MYSQLI_ASSOC );
 		}
 		if( $this->__record_data === false ) throw new exception("set: DBの異常？" );
 		
 		if( array_key_exists( $property, $this->__record_data ) ) {
-			$this->__record_data[$property] = mysql_real_escape_string($value);
+			$this->__record_data[$property] = ((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $value) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
 			$this->__f_dirty = true;
 		}
 		else {
@@ -157,7 +157,7 @@ class DBRecord {
 			throw $e;
 		}
 		if( $result === false ) throw new exception("COUNT失敗");
-		$retval = mysql_fetch_row( $result );
+		$retval = mysqli_fetch_row( $result );
 		return $retval[0];
 	}
 	
@@ -174,7 +174,7 @@ class DBRecord {
 			throw $e;
 		}
 		if( $result === false ) throw new exception("レコードが存在しません");
-		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		while ($row = mysqli_fetch_array($result,  MYSQLI_ASSOC)) {
 			array_push( $retval, new self( $table,  'id', $row['id'] ) );
 		}
 		return $retval;

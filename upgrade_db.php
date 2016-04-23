@@ -1,3 +1,4 @@
+
 #!/usr/bin/php
 <?php
 $script_path = dirname( __FILE__ );
@@ -13,7 +14,7 @@ function multi_query( $sqlstrs, $dbh ) {
 	$error = false;
 	
 	foreach( $sqlstrs as $sqlstr ) {
-		$res = mysql_query( $sqlstr );
+		$res = mysqli_query($GLOBALS["___mysqli_ston"],  $sqlstr );
 		if( $res === FALSE ) {
 			echo "failed: ". $sqlstr . "\n";
 			$error = true;
@@ -24,26 +25,26 @@ function multi_query( $sqlstrs, $dbh ) {
 
 function column_exists( $tbl, $col, $dbh ) {
 	$sqlstr = "show fields from ".$tbl." where Field='".$col."'";
-	$res = mysql_query( $sqlstr, $dbh );
-	return mysql_num_rows($res);
+	$res = mysqli_query( $dbh ,  $sqlstr);
+	return mysqli_num_rows($res);
 }
 
 function index_exists( $tbl, $idx, $dbh ) {
 	$sqlstr = "show index from ".$tbl." where Key_name='".$idx."'";
-	$res = mysql_query( $sqlstr, $dbh );
-	return mysql_num_rows($res);
+	$res = mysqli_query( $dbh ,  $sqlstr);
+	return mysqli_num_rows($res);
 }
 
 
 $settings = Settings::factory();
-$dbh = mysql_connect( $settings->db_host, $settings->db_user, $settings->db_pass );
+$dbh = ($GLOBALS["___mysqli_ston"] = mysqli_connect( $settings->db_host,  $settings->db_user,  $settings->db_pass ));
 if( $dbh !== FALSE ) {
 
 	$sqlstr = "use ".$settings->db_name;
-	mysql_query( $sqlstr );
+	mysqli_query($GLOBALS["___mysqli_ston"],  $sqlstr );
 
 	$sqlstr = "set NAMES 'utf8'";
-	mysql_query( $sqlstr );
+	mysqli_query($GLOBALS["___mysqli_ston"],  $sqlstr );
 	
 	// RESERVE_TBL
 
